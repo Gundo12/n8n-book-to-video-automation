@@ -1,0 +1,246 @@
+﻿{
+    "name":  "Bilder und Musik bereitstellen",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "resource":  "fileFolder",
+                                         "returnAll":  true,
+                                         "filter":  {
+                                                        "folderId":  {
+                                                                         "__rl":  true,
+                                                                         "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                                         "mode":  "list",
+                                                                         "cachedResultName":  "Bilder"
+                                                                     }
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       3872,
+                                       -400
+                                   ],
+                      "id":  "0311236f-ce47-4fb5-9ba5-2f532fc55bcc",
+                      "name":  "Bilder suchen"
+                  },
+                  {
+                      "parameters":  {
+                                         "inputSource":  "passthrough"
+                                     },
+                      "id":  "9325b65c-497b-4ab6-9d5a-4fe5977dc605",
+                      "typeVersion":  1.1,
+                      "name":  "Asset-Workflow starten",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "position":  [
+                                       3648,
+                                       -288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Alle eingehenden Items (die 500 Dateimetadaten) holen\nconst items = $input.all();\n\n// Array mischen (Fisher-Yates Shuffle)\nfor (let i = items.length - 1; i \u003e 0; i--) {\n  const j = Math.floor(Math.random() * (i + 1));\n  [items[i], items[j]] = [items[j], items[i]];\n}\n\n// Nur die ersten 6 Items zurückgeben\nreturn items.slice(0, 6);"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       4208,
+                                       -400
+                                   ],
+                      "id":  "166e95cd-d45b-4a2f-ba40-3af6937a6e91",
+                      "name":  "6 Bilder auswählen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "download",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "options":  {
+                                                         "binaryPropertyName":  "background_image"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       4496,
+                                       -400
+                                   ],
+                      "id":  "1d6f5d02-3500-4fae-b930-582865637361",
+                      "name":  "Bilder herunterladen"
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "fileFolder",
+                                         "returnAll":  true,
+                                         "filter":  {
+                                                        "folderId":  {
+                                                                         "__rl":  true,
+                                                                         "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                                         "mode":  "list",
+                                                                         "cachedResultName":  "Musik"
+                                                                     }
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       3872,
+                                       -160
+                                   ],
+                      "id":  "ba608751-6f38-4f72-a394-2f9a95ba08e7",
+                      "name":  "Musik suchen"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Alle eingehenden Items (die 500 Dateimetadaten) holen\nconst items = $input.all();\n\n// Array mischen (Fisher-Yates Shuffle)\nfor (let i = items.length - 1; i \u003e 0; i--) {\n  const j = Math.floor(Math.random() * (i + 1));\n  [items[i], items[j]] = [items[j], items[i]];\n}\n\n// Nur die ersten 6 Items zurückgeben\nreturn items.slice(0, 1);"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       4208,
+                                       -160
+                                   ],
+                      "id":  "6b358cb5-38fd-4d81-8908-dc6701f2e44c",
+                      "name":  "Musik auswählen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "download",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "options":  {
+                                                         "binaryPropertyName":  "background_music"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       4480,
+                                       -160
+                                   ],
+                      "id":  "085a766d-da66-4f68-b0f8-e6fb0174af42",
+                      "name":  "Musik herunterladen"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.merge",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       4896,
+                                       -272
+                                   ],
+                      "id":  "597a9f1d-965f-4b5d-acb1-fb0a399e761e",
+                      "name":  "Assets zusammenführen"
+                  }
+              ],
+    "connections":  {
+                        "Asset-Workflow starten":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Bilder suchen",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        },
+                                                                        {
+                                                                            "node":  "Musik suchen",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Bilder suchen":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "6 Bilder auswählen",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "6 Bilder auswählen":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Bilder herunterladen",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Musik suchen":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Musik auswählen",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Musik auswählen":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Musik herunterladen",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Bilder herunterladen":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Assets zusammenführen",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Musik herunterladen":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Assets zusammenführen",
+                                                                         "type":  "main",
+                                                                         "index":  1
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Assets zusammenführen":  {
+                                                      "main":  [
+                                                                   [
+
+                                                                   ]
+                                                               ]
+                                                  }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate",
+                     "availableInMCP":  false
+                 }
+}

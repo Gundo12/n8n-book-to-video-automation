@@ -1,0 +1,1020 @@
+﻿{
+    "name":  "Freigegebenes Skript als Video rendern",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "resource":  "fileFolder",
+                                         "searchMethod":  "query",
+                                         "returnAll":  true,
+                                         "filter":  {
+                                                        "folderId":  {
+                                                                         "__rl":  true,
+                                                                         "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                                         "mode":  "list",
+                                                                         "cachedResultName":  "Generierte Skripte"
+                                                                     }
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -2048,
+                                       1392
+                                   ],
+                      "id":  "2f08bd8d-2556-4d6f-a125-b5b41e6620bd",
+                      "name":  "Skripte suchen"
+                  },
+                  {
+                      "parameters":  {
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_GOOGLE_SHEET_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Upload_Tracker"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "gid=0",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Tabellenblatt1"
+                                                       },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.7,
+                      "position":  [
+                                       -2272,
+                                       1392
+                                   ],
+                      "id":  "a1479ef6-12a1-4f8a-b508-9b9950b0753e",
+                      "name":  "Tageszähler laden",
+                      "executeOnce":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "deleteFile",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $(\u0027Skript herunterladen\u0027).item.json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -704,
+                                       1552
+                                   ],
+                      "id":  "4e61ab64-7475-438b-b067-24319b25e931",
+                      "name":  "Skript löschen"
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_N8N_WORKFLOW_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Bilder und Musik bereitstellen"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+
+                                                                          },
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "schema":  [
+
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -256,
+                                       1408
+                                   ],
+                      "name":  "Assets laden",
+                      "id":  "4446d808-8b76-4818-be81-957c7fb89d35"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "download",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -1600,
+                                       1392
+                                   ],
+                      "id":  "fd5ea452-f5c1-49f0-b24b-4fecbc17ff57",
+                      "name":  "Skript herunterladen"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.limit",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1824,
+                                       1392
+                                   ],
+                      "id":  "3c74d01f-4d2d-4b51-984f-1c6a196c2b62",
+                      "name":  "Skript auswählen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "text",
+                                         "destinationKey":  "generated_script",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.extractFromFile",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -1376,
+                                       1392
+                                   ],
+                      "id":  "ee933c7c-b65a-4777-8882-cdc655d8b48b",
+                      "name":  "Skripttext extrahieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "sendAndWait",
+                                         "chatId":  "REPLACE_WITH_TELEGRAM_CHAT_ID",
+                                         "message":  "=Bitte um Review: \n\n{{ $json.generated_script }}",
+                                         "approvalOptions":  {
+                                                                 "values":  {
+                                                                                "approvalType":  "double"
+                                                                            }
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1152,
+                                       1392
+                                   ],
+                      "id":  "587344f2-9541-4309-ba5a-039d1ac5c4e7",
+                      "name":  "Freigabe anfragen"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "5d6f610b-e784-4141-bcbc-bfd775b8b551",
+                                                                                   "leftValue":  "={{ $json.data.approved }}",
+                                                                                   "rightValue":  false,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -928,
+                                       1392
+                                   ],
+                      "id":  "d249d43e-8554-441a-bfcc-358b0326caf6",
+                      "name":  "Freigabe prüfen"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "052c4833-496e-4fda-8d47-5f8d6531c135",
+                                                                                     "name":  "alignment",
+                                                                                     "value":  "={{ $json.alignment }}",
+                                                                                     "type":  "object"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "15d533c4-d666-4de4-ab75-6d1ee5726b3a",
+                                                                                     "name":  "normalized_alignment",
+                                                                                     "value":  "={{ $json.normalized_alignment }}",
+                                                                                     "type":  "object"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       -480,
+                                       1216
+                                   ],
+                      "id":  "b4e58f57-26e0-4467-b7a2-a03b4509cad9",
+                      "name":  "Wort-Timing extrahieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "toJson",
+                                         "binaryPropertyName":  "transcription",
+                                         "options":  {
+                                                         "fileName":  "={{ $(\u0027Skript herunterladen\u0027).item.json.name }}_Transcript"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.convertToFile",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -256,
+                                       1216
+                                   ],
+                      "id":  "d77ead44-e4d5-4550-b4ba-ab2f70b8c377",
+                      "name":  "Timing-JSON erstellen"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.elevenlabs.io/v1/text-to-speech/REPLACE_WITH_VOICE_ID/with-timestamps",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "elevenLabsApi",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "text",
+                                                                                       "value":  "={{ $(\u0027Skripttext extrahieren\u0027).item.json.generated_script }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "model_id",
+                                                                                       "value":  "eleven_turbo_v2_5"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "batching":  {
+                                                                          "batch":  {
+                                                                                        "batchSize":  5
+                                                                                    }
+                                                                      }
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -704,
+                                       1216
+                                   ],
+                      "id":  "fa82a150-f352-4329-8bb5-87af356b9ae0",
+                      "name":  "Voice-over erzeugen",
+                      "retryOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\n\nlet voiceOverFile;\nlet transcriptFile;\nlet backgroundMusicFile;\nconst backgroundImages = [];\n\nitems.forEach(item =\u003e {\n  if (!item.binary) return;\n\n  for (const key of Object.keys(item.binary)) {\n    const file = item.binary[key];\n\n    if (key === \u0027voice_over\u0027) {\n      voiceOverFile = file;\n    } \n    else if (key === \u0027transcription\u0027) {\n      transcriptFile = file;\n    } \n    else if (key === \u0027background_music\u0027) {\n      backgroundMusicFile = file;\n    } \n    else if (key === \u0027background_image\u0027) {\n      backgroundImages.push(file);\n    }\n  }\n});\n\nconst finalBinary = {\n  voice_over: voiceOverFile,\n  transcription: transcriptFile,\n  background_music: backgroundMusicFile\n};\n\n// WICHTIG: Wir nutzen hier den Key \"images\" (wie in deinem curl -F \"images=...\")\n// n8n erlaubt es technisch, mehrere Binary-Objekte unter dem gleichen Key \n// in die Pipeline zu legen, WENN der Empfänger-Node (HTTP Request) das unterstützt.\nbackgroundImages.forEach((img, index) =\u003e {\n  finalBinary[`images_${index}`] = img; \n});\n\nreturn [{\n  json: {\n    total_images: backgroundImages.length\n  },\n  binary: finalBinary\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       192,
+                                       1200
+                                   ],
+                      "id":  "480261e4-d467-4c31-96fd-530aea4dab3d",
+                      "name":  "Medienpaket erstellen"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://video-renderer:3000/video",
+                                         "sendBody":  true,
+                                         "contentType":  "multipart-form-data",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "voice_over",
+                                                                                       "inputDataFieldName":  "voice_over"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "transcription",
+                                                                                       "inputDataFieldName":  "transcription"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "background_music",
+                                                                                       "inputDataFieldName":  "background_music"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_0"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_1"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_2"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_3"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_4"
+                                                                                   },
+                                                                                   {
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "name":  "images",
+                                                                                       "inputDataFieldName":  "images_5"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       416,
+                                       1200
+                                   ],
+                      "id":  "e566a15a-89b7-418b-83b6-7d6879d3a53e",
+                      "name":  "Video rendern"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "move",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $(\u0027Skript herunterladen\u0027).item.json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "driveId":  {
+                                                         "__rl":  true,
+                                                         "mode":  "list",
+                                                         "value":  "My Drive"
+                                                     },
+                                         "folderId":  {
+                                                          "__rl":  true,
+                                                          "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "Skripte für die Videos generiert wurden "
+                                                      }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       640,
+                                       1200
+                                   ],
+                      "id":  "0aa3fa9a-7e5c-4010-92ed-3a8ff371ba4c",
+                      "name":  "Skript archivieren",
+                      "notesInFlow":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_GOOGLE_SHEET_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Upload_Tracker"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "gid=0",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Tabellenblatt1"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Uploads":  "={{ $(\u0027Tageszähler laden\u0027).item.json.Uploads + 1 }}",
+                                                                       "row_number":  2
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "row_number"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Uploads",
+                                                                            "displayName":  "Uploads",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "row_number",
+                                                                            "displayName":  "row_number",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.7,
+                      "position":  [
+                                       864,
+                                       1200
+                                   ],
+                      "id":  "344d1a67-2c64-4eba-b793-5e0d71045622",
+                      "name":  "Tageszähler erhöhen",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "bc3f1e75-2902-47f2-bd18-e11369a93e2a",
+                                                                                   "leftValue":  "={{ $(\u0027Tageszähler laden\u0027).item.json.Uploads }}",
+                                                                                   "rightValue":  2,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1088,
+                                       1200
+                                   ],
+                      "id":  "ceb92135-ff1b-4384-b234-49cad4821153",
+                      "name":  "Tagesziel prüfen"
+                  },
+                  {
+                      "parameters":  {
+                                         "numberInputs":  3
+                                     },
+                      "type":  "n8n-nodes-base.merge",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       -32,
+                                       1184
+                                   ],
+                      "id":  "3a8098f8-c6a7-40fb-924e-5b1bd0236bb8",
+                      "name":  "Medien zusammenführen"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "7d6332f7-449d-43fc-b2cf-5f6ad360a8b1",
+                                                                                     "name":  "audio_base64",
+                                                                                     "value":  "={{ $json.audio_base64 }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       -480,
+                                       1024
+                                   ],
+                      "id":  "6447a2f5-c3c9-438d-ad91-13707c4d45fc",
+                      "name":  "Audio extrahieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "toBinary",
+                                         "sourceProperty":  "audio_base64",
+                                         "binaryPropertyName":  "voice_over",
+                                         "options":  {
+                                                         "fileName":  "={{ $(\u0027Skript herunterladen\u0027).item.json.name }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.convertToFile",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -256,
+                                       1024
+                                   ],
+                      "id":  "c32cd32b-4cff-43d3-80f4-6d6dd2c0a6cf",
+                      "name":  "MP3-Datei erstellen"
+                  },
+                  {
+                      "parameters":  {
+                                         "inputSource":  "passthrough"
+                                     },
+                      "id":  "8ab0b78c-9c3d-4fe7-9240-61b13e1e9222",
+                      "typeVersion":  1.1,
+                      "name":  "Subworkflow starten",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "position":  [
+                                       -2496,
+                                       1392
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_N8N_WORKFLOW_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Freigegebenes Skript als Video rendern"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+
+                                                                          },
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "schema":  [
+
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "mode":  "each",
+                                         "options":  {
+                                                         "waitForSubWorkflow":  false
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       1312,
+                                       1312
+                                   ],
+                      "id":  "1726fcdc-3402-47cb-b760-174a3831134c",
+                      "name":  "Nächstes Skript"
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_N8N_WORKFLOW_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Freigegebenes Skript als Video rendern"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+
+                                                                          },
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "schema":  [
+
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "mode":  "each",
+                                         "options":  {
+                                                         "waitForSubWorkflow":  false
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -480,
+                                       1552
+                                   ],
+                      "id":  "20f6cca3-54f5-4997-a1e7-92c23d7c26ad",
+                      "name":  "Nach Ablehnung weiter"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "REPLACE_WITH_GOOGLE_SHEET_ID",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Upload_Tracker"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "gid=0",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Tabellenblatt1"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Uploads":  "=0",
+                                                                       "row_number":  2
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "row_number"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Uploads",
+                                                                            "displayName":  "Uploads",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "row_number",
+                                                                            "displayName":  "row_number",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.7,
+                      "position":  [
+                                       1312,
+                                       1120
+                                   ],
+                      "id":  "ab45bf91-ab6b-44ca-b915-895fc84de805",
+                      "name":  "Zähler zurücksetzen",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "name":  "={{ $(\u0027Skript herunterladen\u0027).item.json.name }}",
+                                         "driveId":  {
+                                                         "__rl":  true,
+                                                         "mode":  "list",
+                                                         "value":  "My Drive"
+                                                     },
+                                         "folderId":  {
+                                                          "__rl":  true,
+                                                          "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "TikToks Finsished"
+                                                      },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       640,
+                                       1440
+                                   ],
+                      "id":  "0be5e899-6810-4257-b116-2b81c7c98804",
+                      "name":  "Video speichern"
+                  }
+              ],
+    "connections":  {
+                        "Subworkflow starten":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Tageszähler laden",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Tageszähler laden":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Skripte suchen",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Skripte suchen":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Skript auswählen",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Skript auswählen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Skript herunterladen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Skript herunterladen":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Skripttext extrahieren",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Skripttext extrahieren":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Freigabe anfragen",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Freigabe anfragen":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Freigabe prüfen",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Freigabe prüfen":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Voice-over erzeugen",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Skript löschen",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Voice-over erzeugen":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Wort-Timing extrahieren",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     },
+                                                                     {
+                                                                         "node":  "Audio extrahieren",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     },
+                                                                     {
+                                                                         "node":  "Assets laden",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Wort-Timing extrahieren":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Timing-JSON erstellen",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Audio extrahieren":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "MP3-Datei erstellen",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "MP3-Datei erstellen":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Medien zusammenführen",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Timing-JSON erstellen":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Medien zusammenführen",
+                                                                           "type":  "main",
+                                                                           "index":  1
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Assets laden":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Medien zusammenführen",
+                                                                  "type":  "main",
+                                                                  "index":  2
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Medien zusammenführen":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Medienpaket erstellen",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Medienpaket erstellen":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Video rendern",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Video rendern":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Skript archivieren",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               },
+                                                               {
+                                                                   "node":  "Video speichern",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Skript archivieren":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Tageszähler erhöhen",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Tageszähler erhöhen":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Tagesziel prüfen",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Tagesziel prüfen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Zähler zurücksetzen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Nächstes Skript",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Skript löschen":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Nach Ablehnung weiter",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate",
+                     "availableInMCP":  false
+                 }
+}

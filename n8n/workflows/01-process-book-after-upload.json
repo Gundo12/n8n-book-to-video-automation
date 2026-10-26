@@ -1,0 +1,450 @@
+﻿{
+    "name":  "Buch nach Upload in Skripte umwandeln",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "pollTimes":  {
+                                                           "item":  [
+                                                                        {
+                                                                            "mode":  "everyMinute"
+                                                                        }
+                                                                    ]
+                                                       },
+                                         "triggerOn":  "specificFolder",
+                                         "folderToWatch":  {
+                                                               "__rl":  true,
+                                                               "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                               "mode":  "list",
+                                                               "cachedResultName":  "Bücher roh"
+                                                           },
+                                         "event":  "fileCreated",
+                                         "options":  {
+                                                         "fileType":  "all"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDriveTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -608,
+                                       368
+                                   ],
+                      "id":  "0cdbcdf5-8a10-4a13-b13d-36041cf4a703",
+                      "name":  "Buch-Upload erkennen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "share",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $(\u0027Buch-Upload erkennen\u0027).item.json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "permissionsUi":  {
+                                                               "permissionsValues":  {
+                                                                                         "role":  "reader",
+                                                                                         "type":  "anyone"
+                                                                                     }
+                                                           },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -160,
+                                       368
+                                   ],
+                      "id":  "fd13a492-9040-47c8-a3c8-89cb4ea7ad33",
+                      "name":  "Buchdatei freigeben"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "download",
+                                         "fileId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $(\u0027Buch-Upload erkennen\u0027).item.json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       64,
+                                       368
+                                   ],
+                      "id":  "55cef2b8-6fc9-4090-a3c5-c87d98c928a1",
+                      "name":  "Buch herunterladen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "pdf",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.extractFromFile",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       288,
+                                       368
+                                   ],
+                      "id":  "59e01f0c-8379-4bdf-be64-ad450498ab51",
+                      "name":  "Text extrahieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fullText = items[0].json.text;\nconst chunkSize = 4000; \nconst overlap = 400; \nconst chunks = [];\n\n// 1. Zuerst alle Chunks erstellen\nfor (let i = 0; i \u003c fullText.length; i += (chunkSize - overlap)) {\n    chunks.push({\n        json: {\n            chunkContent: fullText.substring(i, i + chunkSize),\n            chunkIndex: chunks.length + 1\n        }\n    });\n}\n\n// 2. Die Gesamtzahl ermitteln\nconst totalChunks = chunks.length;\n\n// 3. Jedem Chunk die totalChunks hinzufügen\nchunks.forEach(item =\u003e {\n    item.json.totalChunks = totalChunks;\n});\n\nreturn chunks;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       512,
+                                       368
+                                   ],
+                      "id":  "c0207d66-c34a-4b73-8348-34c08d3b402b",
+                      "name":  "Text in Abschnitte teilen"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "createFromText",
+                                         "content":  "={{ $json.output.best_script }}",
+                                         "name":  "={{ $(\u0027Dateiname normalisieren\u0027).item.json.normalizedName }}_{{ $(\u0027Text in Abschnitte teilen\u0027).item.json.chunkIndex }}",
+                                         "driveId":  {
+                                                         "__rl":  true,
+                                                         "mode":  "list",
+                                                         "value":  "My Drive"
+                                                     },
+                                         "folderId":  {
+                                                          "__rl":  true,
+                                                          "value":  "REPLACE_WITH_GOOGLE_DRIVE_FOLDER_ID",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "Generierte Skripte"
+                                                      },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleDrive",
+                      "typeVersion":  3,
+                      "position":  [
+                                       1664,
+                                       368
+                                   ],
+                      "id":  "e5d13fb5-e425-4fd4-a457-4894a9018b7f",
+                      "name":  "Skript speichern"
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "// 1. Zuerst das \".pdf\" am Ende entfernen (Groß-/Kleinschreibung ignoriert)\n// 2. Dann alle Sonderzeichen durch Unterstriche ersetzen\nconst cleanName = $input.item.json.name\n  .replace(/\\.pdf$/i, \u0027\u0027) \n  .replace(/[^a-zA-Z0-9]/g, \u0027_\u0027);\n\nreturn {\n  normalizedName: cleanName\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -384,
+                                       368
+                                   ],
+                      "id":  "33f6c229-4f4c-45cf-a93a-c26df2b2fddd",
+                      "name":  "Dateiname normalisieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "=You are a strict creative reviewer for TikTok voiceover scripts.\n\nYour task is to review generated TikTok voiceover script versions and select the strongest one.\n\nDo not rewrite the scripts.\nDo not improve the scripts.\nDo not combine versions.\nOnly evaluate and choose the best existing version.\n\nChoose the version that best matches:\n- intimate inner monologue\n- emotionally direct and simple\n- natural spoken English\n- strong first sentence\n- clear second-person connection using “you”\n- realization, not explanation\n- calm, reflective, emotionally honest tone\n- slightly uncomfortable truth\n- strong lingering ending\n- no source references\n- no direct advice\n- no generic motivational language\n- no stage directions\n- not overly poetic\n\nThe best version is the one with the strongest emotional impact and the best TikTok voiceover feel.\n\nA version should lose points if it sounds like:\n- a summary\n- an explanation\n- motivational self-help\n- generic advice\n- a polished essay\n- overly dramatic poetry\n\nUSER PROMPT:\nOriginal passage:\n{{ $(\u0027Text in Abschnitte teilen\u0027).item.json.chunkContent }}\n\nGenerated scripts:\nSCRIPT 1: {{ $json.output.script_1 }}\n\nSCRIPT 2: {{ $json.output.script_2 }}\n\nSCRIPT 3: {{ $json.output.script_3 }}\n\nOUTPUT FORMAT:\nReturn only valid JSON.\nDo not include markdown.\nDo not include explanations.\nDo not include the schema itself.\nDo not write anything before or after the JSON.\n\nYour response must be a JSON object with exactly one top-level key: \"output\".\n\nExample shape:\n\n{\n    \"decision\": \"pass\",\n    \"best_version\": 2,\n    \"best_script\": \"Selected script here.\",\n    \"overall_reason\": \"Short reason here.\",\n    \"versions\": [\n      {\n        \"version\": 1,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 112,\n        \"scores\": {\n          \"emotional_pull\": 8.1,\n          \"spoken_naturalness\": 8.3,\n          \"style_match\": 8.0,\n          \"non_generic_quality\": 7.8,\n          \"rhythm\": 8.2,\n          \"usable_score\": 8.1\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      },\n      {\n        \"version\": 2,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 118,\n        \"scores\": {\n          \"emotional_pull\": 8.8,\n          \"spoken_naturalness\": 8.9,\n          \"style_match\": 8.6,\n          \"non_generic_quality\": 8.2,\n          \"rhythm\": 8.5,\n          \"usable_score\": 8.7\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      },\n      {\n        \"version\": 3,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 105,\n        \"scores\": {\n          \"emotional_pull\": 7.4,\n          \"spoken_naturalness\": 8.0,\n          \"style_match\": 7.6,\n          \"non_generic_quality\": 7.1,\n          \"rhythm\": 7.5,\n          \"usable_score\": 7.4\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      }\n    ],\n    \"regeneration_instructions\": \"\"\n  }",
+                                         "hasOutputParser":  true,
+                                         "messages":  {
+                                                          "messageValues":  [
+                                                                                {
+                                                                                    "message":  "You are a strict creative reviewer for TikTok voiceover scripts.\n\nYour task is to review generated TikTok voiceover script versions and select the strongest one.\n\nDo not rewrite the scripts.\nDo not improve the scripts.\nDo not combine versions.\nOnly evaluate and choose the best existing version.\n\nChoose the version that best matches:\n- intimate inner monologue\n- emotionally direct and simple\n- natural spoken English\n- strong first sentence\n- clear second-person connection using “you”\n- realization, not explanation\n- calm, reflective, emotionally honest tone\n- slightly uncomfortable truth\n- strong lingering ending\n- no source references\n- no direct advice\n- no generic motivational language\n- no stage directions\n- not overly poetic\n\nThe best version is the one with the strongest emotional impact and the best TikTok voiceover feel.\n\nA version should lose points if it sounds like:\n- a summary\n- an explanation\n- motivational self-help\n- generic advice\n- a polished essay\n- overly dramatic poetry"
+                                                                                }
+                                                                            ]
+                                                      },
+                                         "batching":  {
+                                                          "batchSize":  5
+                                                      }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.chainLlm",
+                      "typeVersion":  1.9,
+                      "position":  [
+                                       1312,
+                                       368
+                                   ],
+                      "id":  "79cab565-6b59-498b-96df-18c7fe49e401",
+                      "name":  "Varianten bewerten",
+                      "retryOnFail":  true,
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsonSchemaExample":  "{\n    \"decision\": \"pass\",\n    \"best_version\": 2,\n    \"best_script\": \"Selected script here.\",\n    \"overall_reason\": \"Short reason here.\",\n    \"versions\": [\n      {\n        \"version\": 1,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 112,\n        \"scores\": {\n          \"emotional_pull\": 8.1,\n          \"spoken_naturalness\": 8.3,\n          \"style_match\": 8.0,\n          \"non_generic_quality\": 7.8,\n          \"rhythm\": 8.2,\n          \"usable_score\": 8.1\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      },\n      {\n        \"version\": 2,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 118,\n        \"scores\": {\n          \"emotional_pull\": 8.8,\n          \"spoken_naturalness\": 8.9,\n          \"style_match\": 8.6,\n          \"non_generic_quality\": 8.2,\n          \"rhythm\": 8.5,\n          \"usable_score\": 8.7\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      },\n      {\n        \"version\": 3,\n        \"hard_fail\": false,\n        \"hard_fail_reason\": \"\",\n        \"word_count\": 105,\n        \"scores\": {\n          \"emotional_pull\": 7.4,\n          \"spoken_naturalness\": 8.0,\n          \"style_match\": 7.6,\n          \"non_generic_quality\": 7.1,\n          \"rhythm\": 7.5,\n          \"usable_score\": 7.4\n        },\n        \"short_diagnosis\": \"Short diagnosis here.\"\n      }\n    ],\n    \"regeneration_instructions\": \"\"\n  }"
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.outputParserStructured",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       1456,
+                                       608
+                                   ],
+                      "id":  "65b01636-e269-4bff-a5ba-fa05d4d4bc59",
+                      "name":  "Bewertung parsen",
+                      "retryOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsonSchemaExample":  "{\n  \"output\": {\n    \"script_1\": \"Content 1\",\n    \"script_2\": \"Content 2\",\n    \"script_3\": \"Content 3\"\n  }\n}",
+                                         "autoFix":  true
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.outputParserStructured",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -400,
+                                       704
+                                   ],
+                      "id":  "3b3cab14-8c4c-4866-ae33-7e44d969c118",
+                      "name":  "Varianten parsen",
+                      "retryOnFail":  true,
+                      "maxTries":  5
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "let raw = $json.text ?? \u0027\u0027;\n\nif (typeof raw !== \u0027string\u0027) {\n  raw = JSON.stringify(raw);\n}\n\nlet text = raw\n  .replace(/```json/gi, \u0027\u0027)\n  .replace(/```/g, \u0027\u0027)\n  .replace(/\\*\\*/g, \u0027\u0027)\n  .replace(/\\r/g, \u0027\u0027)\n  .trim();\n\n// Normalize labels\ntext = text\n  .replace(/script\\s*1\\s*:?/gi, \u0027VERSION 1:\u0027)\n  .replace(/script\\s*2\\s*:?/gi, \u0027VERSION 2:\u0027)\n  .replace(/script\\s*3\\s*:?/gi, \u0027VERSION 3:\u0027)\n  .replace(/version\\s*1\\s*:?/gi, \u0027VERSION 1:\u0027)\n  .replace(/version\\s*2\\s*:?/gi, \u0027VERSION 2:\u0027)\n  .replace(/version\\s*3\\s*:?/gi, \u0027VERSION 3:\u0027);\n\n// Remove separators\ntext = text.replace(/\\n\\s*-{3,}\\s*\\n/g, \u0027\\n\u0027);\n\nconst match = text.match(\n  /VERSION 1:\\s*([\\s\\S]*?)\\s*VERSION 2:\\s*([\\s\\S]*?)\\s*VERSION 3:\\s*([\\s\\S]*)/i\n);\n\nif (!match) {\n  throw new Error(\u0027Could not find VERSION 1, VERSION 2, and VERSION 3 in this item.\u0027);\n}\n\nconst cleanScript = (value) =\u003e {\n  return value\n    .replace(/^[-–—\\s]+/g, \u0027\u0027)\n    .replace(/\\n+/g, \u0027 \u0027)\n    .replace(/\\s+/g, \u0027 \u0027)\n    .trim();\n};\n\nconst script_1 = cleanScript(match[1]);\nconst script_2 = cleanScript(match[2]);\nconst script_3 = cleanScript(match[3]);\n\nif (!script_1 || !script_2 || !script_3) {\n  throw new Error(\u0027One or more scripts are empty.\u0027);\n}\n\n// Correct return format for \"Run Once for Each Item\"\nreturn {\n  json: {\n    output: {\n      script_1,\n      script_2,\n      script_3,\n    },\n  },\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1088,
+                                       368
+                                   ],
+                      "id":  "9a657b21-a633-47f9-b6c2-6597bc3cb6fd",
+                      "name":  "Varianten normalisieren"
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "=You are a writer who creates emotionally engaging TikTok-style voiceover scripts.\n\nWrite in simple, natural English.\nWrite directly to the viewer using “you”.\nMake every script feel like an intimate inner monologue, not a summary or explanation.\n\nPrioritize:\n- strong first sentences\n- emotional recognition\n- natural spoken rhythm\n- short clear sentences\n- repetition and contrast\n- quiet tension\n\nAvoid:\n- references to the source text, book, chapter, passage, or author\n\nYour writing should feel personal, reflective, and slightly uncomfortable in a truthful way.\n\nTransform the following passage into 3 different TikTok voiceover scripts.\n\nSTYLE:\n- Feels like a deep thought or inner monologue\n- Emotionally direct and simple\n- Written like natural spoken thoughts\n- Not a summary\n- The viewer should feel personally addressed\n- It should feel like a realization, not an explanation\n- Write directly to the viewer using “you”\n\nFORMAT:\n- Language: English\n- Each version: 70–130 words\n- Short, clear sentences\n- Natural spoken flow\n- No lists inside the scripts\n\nVERSION REQUIREMENTS:\nGenerate 3 clearly different versions from the same passage.\n\nEach version must preserve the core emotional idea, but use:\n- A different hook\n- A different perspective\n- A different emotional angle\n- A different rhythm or repetition pattern\n- A different closing thought\n\nDo not make the versions slight rewrites of each other.\nThey should feel like 3 separate creative attempts based on the same passage.\n\nSTRUCTURE:\nFollow this structure naturally, without labels inside the script:\n\n1. HOOK:\nThe hook must:\n- Be the first sentence of the script\n- Be written directly to the viewer using “you”\n- Be short and clear\n- Create emotional tension, curiosity, or quiet discomfort\n- Feel like a personal realization, not a slogan\n- Avoid generic openings\n\nGood hook examples:\n- “You’re not tired of people. You’re tired of not being seen.”\n- “You keep calling it peace, but maybe it’s just distance.”\n- “Why do you understand everyone except yourself?”\n- “You don’t miss them. You miss who you were around them.”\n\nBad hook examples:\n- “Life is full of challenges.”\n- “Everyone goes through hard times.”\n- “Sometimes things are difficult.”\n- “You need to believe in yourself.”\n\n2. RELATABLE REALITY:\nDescribe the inner state, behavior, or quiet conflict in a way that feels familiar.\n\n3. RHYTHM:\nUse repetition, contrast, or sentence patterns to create flow.\n\n4. ENDING:\nEnd with a strong question or a quiet thought that lingers.\n\nWRITING RULES:\n- Use simple, everyday language\n- Write in second person using “you”\n- Prioritize emotional clarity over complexity\n- Use repetition naturally\n- Keep the scripts universal and relatable\n- Do not explain the passage\n- Do not summarize the passage\n- Transform the core idea into an emotional voiceover\n- Do not mention the author, book, chapter, or text unless the passage itself makes it absolutely necessary\n\nTONE:\n- Calm\n- Reflective\n- Emotionally honest\n- Slightly uncomfortable\n- Not motivational\n- Not preachy\n\nFORBIDDEN:\n- “This book says…”\n- “In this chapter…”\n- “The author explains…”\n- Direct advice like “you should…”\n- Generic motivational phrases\n- Overly poetic or metaphor-heavy language\n- Stage directions, parenthetical instructions, or tone indicators\n- Examples: no “(Slow pace)”, no “(Voiceover:)”, no “Here are three versions”\n\nQUALITY CHECK:\nBefore finalizing, silently check each version.\n\n\nOUTPUT FORMAT:\nReturn plain text only.\nDo not return JSON.\nDo not use markdown.\nDo not use bullet points.\nDo not use bold text.\nDo not use separators like ---.\n\nUse exactly this structure:\n\nVERSION 1:\nscript text here\n\nVERSION 2:\nscript text here\n\nVERSION 3:\nscript text here\n\nImportant:\n- The labels must be exactly VERSION 1:, VERSION 2:, VERSION 3:\n- Do not write anything before VERSION 1:\n- Do not write anything after VERSION 3\n- Each version must be one continuous script text\n\nPASSAGE:\n{{ $json.chunkContent }}",
+                                         "messages":  {
+                                                          "messageValues":  [
+
+                                                                            ]
+                                                      },
+                                         "batching":  {
+                                                          "batchSize":  5
+                                                      }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.chainLlm",
+                      "typeVersion":  1.9,
+                      "position":  [
+                                       736,
+                                       368
+                                   ],
+                      "id":  "604845bb-6313-4fc4-bac4-2d8a12bcc46e",
+                      "name":  "3 Skripte erzeugen",
+                      "retryOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "value":  "gpt-5.5",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "gpt-5.5"
+                                                   },
+                                         "builtInTools":  {
+
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       816,
+                                       720
+                                   ],
+                      "id":  "257dc2b0-fa63-4be3-b8ac-ca1d6e9eddfa",
+                      "name":  "OpenAI: Skripte"
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "value":  "gpt-5.5",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "gpt-5.5"
+                                                   },
+                                         "builtInTools":  {
+
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       1200,
+                                       576
+                                   ],
+                      "id":  "555b404f-7a19-4b1d-a7f8-05b389007477",
+                      "name":  "OpenAI: Bewertung"
+                  }
+              ],
+    "connections":  {
+                        "Buch-Upload erkennen":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Dateiname normalisieren",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Buchdatei freigeben":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Buch herunterladen",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Buch herunterladen":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Text extrahieren",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Text extrahieren":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Text in Abschnitte teilen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Text in Abschnitte teilen":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "3 Skripte erzeugen",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Skript speichern":  {
+                                                 "main":  [
+                                                              [
+
+                                                              ]
+                                                          ]
+                                             },
+                        "Dateiname normalisieren":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Buchdatei freigeben",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Bewertung parsen":  {
+                                                 "ai_outputParser":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Varianten bewerten",
+                                                                                 "type":  "ai_outputParser",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                             },
+                        "Varianten bewerten":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Skript speichern",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Varianten parsen":  {
+                                                 "ai_outputParser":  [
+                                                                         [
+
+                                                                         ]
+                                                                     ]
+                                             },
+                        "3 Skripte erzeugen":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Varianten normalisieren",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Varianten normalisieren":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Varianten bewerten",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "OpenAI: Skripte":  {
+                                                "ai_languageModel":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "3 Skripte erzeugen",
+                                                                                 "type":  "ai_languageModel",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                            },
+                        "OpenAI: Bewertung":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Varianten bewerten",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 }
+}
