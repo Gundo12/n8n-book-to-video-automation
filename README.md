@@ -1,4 +1,4 @@
-# Automatisierte Book-to-TikTok-Video-Pipeline
+# Automatisierte Book-to-Video-Pipeline
 
 > 🎬 **[Erzeugte Videos auf TikTok ansehen: @abyss_echos](https://www.tiktok.com/@abyss_echos)**
 >
